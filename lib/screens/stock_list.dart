@@ -1,15 +1,14 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-import 'package:psenotifier/blocs/stock_list_block.dart';
+import 'package:psenotifier/blocs/stock_list.dart';
 import 'package:psenotifier/models/stock.dart';
-import 'package:psenotifier/models/stocks.dart';
 import 'package:psenotifier/networking/response.dart';
 import 'package:psenotifier/components/loading.dart';
 import 'package:psenotifier/components/error.dart';
 
 class StockListScreen extends StatefulWidget {
-
   @override
   _StockListScreenState createState() => _StockListScreenState();
 }
@@ -28,7 +27,7 @@ class _StockListScreenState extends State<StockListScreen> {
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () => _bloc.fetchStocks(),
-        child: StreamBuilder<Response<Stocks>>(
+        child: StreamBuilder<Response<List<Stock>>>(
           stream: _bloc.stockListStream,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
@@ -37,7 +36,10 @@ class _StockListScreenState extends State<StockListScreen> {
                   return Loading(loadingMessage: snapshot.data.message);
                   break;
                 case Status.COMPLETED:
-                  return StockList(stockList: snapshot.data.data.stock);
+                  return StockList(
+                    stockList: snapshot.data.data,
+                    bloc: _bloc,
+                  );
                   break;
                 case Status.ERROR:
                   return Error(
@@ -62,9 +64,10 @@ class _StockListScreenState extends State<StockListScreen> {
 }
 
 class StockList extends StatefulWidget {
-  StockList({Key key, this.stockList}) : super(key: key);
+  StockList({Key key, this.stockList, this.bloc}) : super(key: key);
 
   final List<Stock> stockList;
+  final StockListBloc bloc;
 
   @override
   _StockListState createState() => _StockListState();
@@ -72,12 +75,15 @@ class StockList extends StatefulWidget {
 
 class _StockListState extends State<StockList> {
   List<Stock> filteredList;
+  StockListBloc bloc;
   TextEditingController controller = new TextEditingController();
 
   @override
   void initState() {
     super.initState();
     filteredList = widget.stockList;
+    bloc = widget.bloc;
+
     controller.addListener(() {
       filterStockList(controller.text);
     });
@@ -97,25 +103,52 @@ class _StockListState extends State<StockList> {
   Widget build(BuildContext context) {
     return new Scaffold(
       appBar: AppBar(
-        title: TextField(
-          controller: controller,
-          decoration: InputDecoration(
-            hintText: "Search Stocks",
-            suffixIcon: IconButton(
-              onPressed: () => controller.clear(),
-              icon: Icon(Icons.clear),
+        automaticallyImplyLeading: false,
+        title: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            InkWell(
+              child: Icon(
+                Icons.arrow_back,
+                size: 24.0,
+              ),
+              onTap: () {
+                Navigator.popAndPushNamed(context, '/');
+              },
             ),
-          ),
+            SizedBox(
+              width: 10.0,
+            ),
+            Expanded(
+              child: TextField(
+                controller: controller,
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  hintText: "Search Stocks",
+                  suffixIcon: IconButton(
+                    onPressed: () => controller.clear(),
+                    icon: Icon(Icons.clear),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
       body: ListView.builder(
         itemBuilder: (context, index) {
+          IconData icon = filteredList[index].isWatch
+              ? FontAwesomeIcons.eyeSlash
+              : FontAwesomeIcons.eye;
           return ListTile(
             title: Text(filteredList[index].name),
             subtitle: Text(filteredList[index].symbol),
-            trailing: Icon(
-              FontAwesomeIcons.eye,
-              size: 18.0,
+            trailing: IconButton(
+              icon: Icon(icon),
+              iconSize: 18.0,
+              onPressed: () {
+                bloc.saveStockToWatchlist(filteredList[index].symbol);
+              },
             ),
           );
         },

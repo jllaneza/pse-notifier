@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:psenotifier/screens/watchlist_screen.dart';
+import 'package:psenotifier/screens/stock_list.dart';
+import 'package:psenotifier/screens/watchlist.dart';
 
 void main() => runApp(MyApp());
 
@@ -14,8 +15,11 @@ class MyApp extends StatelessWidget {
           color: Colors.black87,
         ),
       ),
-      home: WatchlistScreen(title: 'PSE Notifier'),
-//      home: WatchlistScreen(title: 'PSE Notifier'),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => WatchlistScreen(),
+        '/stock-list': (context) => StockListScreen(),
+      },
     );
   }
 }

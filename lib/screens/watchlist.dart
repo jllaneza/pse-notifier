@@ -1,21 +1,16 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 
 import 'package:psenotifier/components/loading.dart';
 import 'package:psenotifier/components/error.dart';
-import 'package:psenotifier/blocs/stock_list_block.dart';
+import 'package:psenotifier/blocs/stock_list.dart';
 import 'package:psenotifier/models/stock.dart';
 import 'package:psenotifier/networking/response.dart';
-import 'package:psenotifier/models/stocks.dart';
+import 'package:psenotifier/screens/stock_list.dart';
 
 const List<String> _rowHeader = ['Stock', 'Price', 'Actions'];
+const _title = 'PSE Notifier';
 
 class WatchlistScreen extends StatefulWidget {
-  WatchlistScreen({Key key, this.title}) : super(key: key);
-
-  final String title;
-
   @override
   _WatchlistScreenState createState() => _WatchlistScreenState();
 }
@@ -33,8 +28,9 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Center(
-          child: Text(widget.title),
+          child: Text(_title),
         ),
       ),
       body: Column(
@@ -60,7 +56,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
           Expanded(
             child: RefreshIndicator(
               onRefresh: () => _bloc.fetchStocks(),
-              child: StreamBuilder<Response<Stocks>>(
+              child: StreamBuilder<Response<List<Stock>>>(
                 stream: _bloc.stockListStream,
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
@@ -69,7 +65,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                         return Loading(loadingMessage: snapshot.data.message);
                         break;
                       case Status.COMPLETED:
-                        return Watchlist(watchlist: snapshot.data.data.stock);
+                        return Watchlist(watchlist: snapshot.data.data);
                         break;
                       case Status.ERROR:
                         return Error(
@@ -90,7 +86,9 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
         height: 55,
         padding: EdgeInsets.symmetric(vertical: 10.0),
         child: RawMaterialButton(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.popAndPushNamed(context, '/stock-list');
+          },
           elevation: 2.0,
           fillColor: Colors.white,
           child: Text(
@@ -144,7 +142,7 @@ class _WatchlistState extends State<Watchlist> {
   @override
   void initState() {
     super.initState();
-    watchlist = widget.watchlist;
+    watchlist = widget.watchlist.where((stock) => stock.isWatch).toList();
   }
 
   @override
@@ -171,7 +169,7 @@ class _WatchlistState extends State<Watchlist> {
     double percentage = stock.percentChange;
     String percentChange = percentage > 0 ? '+$percentage%' : '$percentage%';
     Color percentageColor = percentage > 0 ? Colors.green : Colors.red;
-    
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: <Widget>[
