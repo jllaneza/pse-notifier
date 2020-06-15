@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:psenotifier/screens/stock_list.dart';
-import 'package:psenotifier/screens/watchlist.dart';
+
+import 'package:psenotifier/models/alert_list_screen_args.dart';
+import 'package:psenotifier/screens/screens.dart';
 
 void main() => runApp(MyApp());
 
@@ -19,6 +20,14 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => WatchlistScreen(),
         '/stock-list': (context) => StockListScreen(),
+        '/alert-list': (context) {
+          AlertListScreenArgs arguments =
+              ModalRoute.of(context).settings.arguments;
+          return AlertListScreen(
+            price: arguments.price,
+            symbol: arguments.symbol,
+          );
+        },
       },
     );
   }

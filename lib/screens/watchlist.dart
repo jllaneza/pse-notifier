@@ -5,7 +5,7 @@ import 'package:psenotifier/components/error.dart';
 import 'package:psenotifier/blocs/stock_list.dart';
 import 'package:psenotifier/models/stock.dart';
 import 'package:psenotifier/networking/response.dart';
-import 'package:psenotifier/screens/stock_list.dart';
+import 'package:psenotifier/models/alert_list_screen_args.dart';
 
 const List<String> _rowHeader = ['Stock', 'Price', 'Actions'];
 const _title = 'PSE Notifier';
@@ -91,9 +91,9 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
           },
           elevation: 2.0,
           fillColor: Colors.white,
-          child: Text(
-            '+',
-            style: TextStyle(fontSize: 28.0, color: Colors.black87),
+          child: Icon(
+            Icons.add,
+            color: Colors.black87,
           ),
           shape: CircleBorder(),
         ),
@@ -210,7 +210,10 @@ class _WatchlistState extends State<Watchlist> {
               ),
               IconButton(
                 icon: Icon(Icons.notifications),
-                onPressed: () => {},
+                onPressed: () {
+                  AlertListScreenArgs arguments = AlertListScreenArgs(stock.symbol, stock.price.amount);
+                  Navigator.pushNamed(context, '/alert-list', arguments: arguments);
+                },
               ),
             ],
           ),
