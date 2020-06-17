@@ -28,11 +28,11 @@ class StockListBloc {
     stockListSink.add(Response.loading('Getting Stock List.'));
     try {
       List<String> _watchlist = await _watchlistRepository.getWatchlist();
+      _watchlist = _watchlist ?? [];
       _stockList = (await _stockRepository.fetchStockListData()).map((stock) {
         stock.isWatch = _watchlist.contains(stock.symbol);
         return stock;
       }).toList();
-
       stockListSink.add(Response.completed(_stockList));
     } catch (e) {
       stockListSink.add(Response.error(e.toString()));
