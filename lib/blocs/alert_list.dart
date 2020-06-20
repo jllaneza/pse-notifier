@@ -34,7 +34,7 @@ class AlertListBloc {
   }
 
   createAlert(Alert alert) async {
-    int id = await _alertRepository.createAlert(alert);
+    String id = await _alertRepository.createAlert(alert);
     alert.id = id;
     _alertList.add(alert);
     alertListSink.add(Response.completed(_alertList));
@@ -43,11 +43,17 @@ class AlertListBloc {
   toggleAlertNotification(Alert alert) async {
     int index = _alertList.indexWhere((a) => a.id == alert.id);
     _alertList[index].isEnable = !_alertList[index].isEnable;
-    await _alertRepository.updateAlert(alert);
     alertListSink.add(Response.completed(_alertList));
+
+    bool success = await _alertRepository.updateAlert(alert);
+    // revert the change when it fails
+    if (!success) {
+      _alertList[index].isEnable = !_alertList[index].isEnable;
+      alertListSink.add(Response.completed(_alertList));
+    }
   }
 
-  deleteAlert(int id) async {
+  deleteAlert(String id) async {
     await _alertRepository.deleteAlert(id);
     _alertList.removeWhere((alert) => alert.id == id);
     alertListSink.add(Response.completed(_alertList));

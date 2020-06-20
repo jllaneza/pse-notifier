@@ -10,6 +10,7 @@ import 'package:psenotifier/networking/response.dart';
 
 const _title = 'Alerts';
 final _currencyFormatter = NumberFormat.currency(symbol: 'PHP');
+final _percentFormatter = NumberFormat.decimalPercentPattern(locale: 'en', decimalDigits: 3);
 
 class AlertListScreen extends StatefulWidget {
   AlertListScreen({Key key, this.symbol, this.price}) : super(key: key);
@@ -126,6 +127,7 @@ class AlertBottomSheet extends StatefulWidget {
 class _AlertBottomSheetState extends State<AlertBottomSheet> {
   AlertListBloc bloc;
   Color trackBarColor;
+  double priceChange = 0;
   double priceValue;
   double initPrice;
   double min;
@@ -137,8 +139,8 @@ class _AlertBottomSheetState extends State<AlertBottomSheet> {
     bloc = widget.bloc;
     trackBarColor = Colors.transparent;
     initPrice = priceValue = widget.price;
-    min = (priceValue.ceil() - 1000).toDouble();
-    max = (priceValue.ceil() + 1000).toDouble();
+    min = (priceValue.ceil() - 500).toDouble();
+    max = (priceValue.ceil() + 500).toDouble();
   }
 
   @override
@@ -197,11 +199,22 @@ class _AlertBottomSheetState extends State<AlertBottomSheet> {
                         : Colors.white,
                   ),
                 ),
-                Text(
-                  _currencyFormatter.format(priceValue),
-                  style: TextStyle(
-                    fontSize: 20.0,
-                  ),
+                Column(
+                  children: <Widget>[
+                    Text(
+                      _currencyFormatter.format(priceValue),
+                      style: TextStyle(
+                        fontSize: 20.0,
+                      ),
+                    ),
+                    Text(
+                      _percentFormatter.format(priceChange),
+                      style: TextStyle(
+                        fontSize: 14.0,
+                        color: initPrice == priceValue ? Colors.white24 : trackBarColor
+                      ),
+                    ),
+                  ],
                 ),
                 Text(
                   'Above',
@@ -228,10 +241,11 @@ class _AlertBottomSheetState extends State<AlertBottomSheet> {
             handler: buildSliderHandler(Icons.drag_handle),
             onDragging: (handlerIndex, lowerValue, upperValue) {
               setState(() {
+                priceChange =  (lowerValue - initPrice) / initPrice;
                 if (lowerValue > initPrice) {
-                  trackBarColor = Colors.blueAccent;
+                  trackBarColor = Colors.green;
                 } else {
-                  trackBarColor = Colors.redAccent;
+                  trackBarColor = Colors.red;
                 }
                 priceValue = lowerValue;
               });

@@ -1,5 +1,5 @@
 class Alert {
-    int id;
+    String id;
     bool isAbove;
     bool isEnable;
     double price;
@@ -9,19 +9,17 @@ class Alert {
 
     factory Alert.fromJson(Map<String, dynamic> json) {
         return Alert(
-            id: json['id'], 
-            isAbove: json['isAbove'] == 1,
-            isEnable: json['isEnable'] == 1,
+            isAbove: json['isAbove'],
+            isEnable: json['isEnable'],
             price: json['price'], 
-            symbol: json['symbol'], 
+            symbol: json['symbol'],
         );
     }
 
     Map<String, dynamic> toJson() {
         final Map<String, dynamic> data = new Map<String, dynamic>();
-        data['id'] = this.id;
-        data['isAbove'] = this.isAbove ? 1 : 0;
-        data['isEnable'] = this.isEnable ? 1 : 0;
+        data['isAbove'] = this.isAbove;
+        data['isEnable'] = this.isEnable;
         data['price'] = this.price;
         data['symbol'] = this.symbol;
         return data;

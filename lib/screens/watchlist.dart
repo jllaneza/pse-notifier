@@ -6,9 +6,15 @@ import 'package:psenotifier/blocs/stock_list.dart';
 import 'package:psenotifier/models/stock.dart';
 import 'package:psenotifier/networking/response.dart';
 import 'package:psenotifier/models/alert_list_screen_args.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 const List<String> _rowHeader = ['Stock', 'Price', 'Alert'];
 const _title = 'PSE Notifier';
+
+Future<dynamic> myBackgroundMessageHandler(Map<String, dynamic> message) {
+  print(message);
+  return message['data'];
+}
 
 class WatchlistScreen extends StatefulWidget {
   @override
@@ -16,16 +22,31 @@ class WatchlistScreen extends StatefulWidget {
 }
 
 class _WatchlistScreenState extends State<WatchlistScreen> {
-  StockListBloc _bloc;
+  StockListBloc bloc;
+  FirebaseMessaging firebaseMessaging = FirebaseMessaging();
 
   @override
   void initState() {
     super.initState();
-    _bloc = StockListBloc();
+    bloc = StockListBloc();
+    firebaseMessaging.configure(
+      // TODO: finalize how to handle notifications on different states
+      onMessage: (Map<String, dynamic> message) async {
+        print("onMessage: $message");
+      },
+      onBackgroundMessage: myBackgroundMessageHandler,
+      onLaunch: (Map<String, dynamic> message) async {
+        print("onLaunch: $message");
+      },
+      onResume: (Map<String, dynamic> message) async {
+        print("onResume: $message");
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    firebaseMessaging.getToken().then((value) => print(value));
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -55,9 +76,9 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
           ),
           Expanded(
             child: RefreshIndicator(
-              onRefresh: () => _bloc.fetchStocks(),
+              onRefresh: () => bloc.fetchStocks(),
               child: StreamBuilder<Response<List<Stock>>>(
-                stream: _bloc.stockListStream,
+                stream: bloc.stockListStream,
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     switch (snapshot.data.status) {
@@ -70,7 +91,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                       case Status.ERROR:
                         return Error(
                           errorMessage: snapshot.data.message,
-                          onRetryPressed: () => _bloc.fetchStocks(),
+                          onRetryPressed: () => bloc.fetchStocks(),
                         );
                         break;
                     }
@@ -87,7 +108,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
         padding: EdgeInsets.symmetric(vertical: 10.0),
         child: RawMaterialButton(
           onPressed: () {
-            Navigator.popAndPushNamed(context, '/stock-list');
+            Navigator.pushNamed(context, '/stock-list');
           },
           elevation: 2.0,
           fillColor: Colors.white,
@@ -122,7 +143,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
 
   @override
   void dispose() {
-    _bloc.dispose();
+    bloc.dispose();
     super.dispose();
   }
 }
